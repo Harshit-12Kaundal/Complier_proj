@@ -19,7 +19,7 @@ function App() {
       setOutput(data.output);
     } catch ({response}) {
       if(response){
-        const errMsg=response.data.stderr;
+        const errMsg= response.data.stderr;
         setOutput(errMsg);
       }
       else{
