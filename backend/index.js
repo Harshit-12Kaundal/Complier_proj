@@ -1,17 +1,35 @@
 const express =require('express')
 const cors= require('cors');
+const mongoose = require('mongoose');
 
 const {generateFile}= require('./GenerateFile');
 const{ executeCpp } =require('./executeCpp'); 
 const { executePy } = require('./executePy');
+const Job=require('./models/job.js')
+
+mongoose.connect('mongodb://127.0.0.1:27017/mydatabase')
+  .then(() => {
+    console.log('Successfully connected to the database');
+  })
+  .catch((err) => {
+    console.log('Error occurred:', err.message);
+  });
+
+
+
 const app =express();
 
 app.use(cors());
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    return res.json({hello:"world!"})
+app.get('/status', async(req, res) => {
+    const jobId=req.query.id;
+    if(jobId ==undefined){
+        return res.status(404).json({success:false ,error:"missing id query param"});
+    }
+
+    const job=await new job.findbyId(jobId);
 });
 
 app.post('/run', async(req, res) => {
@@ -23,6 +41,12 @@ app.post('/run', async(req, res) => {
 
     try{
         const filepath = await generateFile(language, code);
+
+        const job= await new Job({language:language, filepath}).save();
+        const jobId=job["_id"];
+
+        res.status(201).json({success:true, jobId});
+        console.log(job);
         let output;
         
         if(language === "cpp"){
@@ -31,7 +55,8 @@ app.post('/run', async(req, res) => {
         else{
             output= await executePy(filepath);
         }
-        return res.json({filepath, output});
+        cons
+        // return res.json({filepath, output});
     }
     catch(err){
         if (err.response) {
