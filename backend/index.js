@@ -36,7 +36,7 @@ app.get('/status', async(req, res) => {
             res.status(404).json({success:false ,error:"Invalid job id"});
         }
 
-        res.status(200).json(job);
+        res.status(200).json({success:true,job});
     } catch (error) {
         return res.status(404).json({success:false ,error:JSON.stringify(error)}); 
     }

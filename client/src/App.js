@@ -7,6 +7,8 @@ function App() {
   const [code, setCode]=useState('');
   const [output,setOutput] = useState('');
   const [language,setLanguage] = useState('');
+  const [status, setStatus] = useState('');
+  const [jobId,setJobId] = useState('');
 
   const handleSubmit = async(e) => {
     e.preventDefault();
@@ -16,8 +18,33 @@ function App() {
     };
     try {
       const {data}=await axios.post("http://localhost:5000/run",payload);
-      console.log(data);
-      setOutput(data.jobId);
+      // console.log(data);
+      setJobId(data.jobId);
+
+      let intervalId;
+
+
+      intervalId=setInterval(async()=>{
+        const {data:dataRes}= await axios.get("http://localhost:5000/status",
+        {params:{id:data.jobId}}
+      ); 
+      const {success ,job,error} =dataRes;
+      console.log(dataRes);
+      if(success) {
+        const {status:jobStatus ,output:jobOutput} =job;
+        setStatus(jobStatus);
+      if(jobStatus === "pending")return ;
+        setOutput(jobOutput);
+        clearInterval(intervalId);
+      }
+      else{
+        console.error(error)
+        clearInterval(intervalId);
+        setOutput(error);
+      }
+
+      console.log(dataRes);
+      },1000);
     } catch ({response}) {
       if(response){
         const errMsg= response.data.stderr;
@@ -48,7 +75,9 @@ function App() {
         <textarea rows="20" cols="75" value={code} onChange={(e)=>setCode(e.target.value)}></textarea>
         <br/>
         <button onClick={handleSubmit}>Submit</button>
-        <p>{output}</p>
+        <p>{status}</p>
+        <p>{jobId && `jobId: ${jobId}`}</p>
+        <p>{output}</p> 
     </div>
   );
 }
