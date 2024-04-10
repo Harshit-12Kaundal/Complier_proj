@@ -39,39 +39,51 @@ app.post('/run', async(req, res) => {
         return res.status(400).json({success:false, message:"Empty code body"});
     }
 
+    let job;
+
     try{
         const filepath = await generateFile(language, code);
 
-        const job= await new Job({language:language, filepath}).save();
+        job= await new Job({language:language, filepath}).save();
         const jobId=job["_id"];
 
         res.status(201).json({success:true, jobId});
         console.log(job);
         let output;
-        
+        job["startedAt"]= new Date();
         if(language === "cpp"){
             output =await executeCpp(filepath);
         }
         else{
             output= await executePy(filepath);
         }
-        cons
+        job["completedAt"]=new Date();
+        job["status"]="success";
+        job["output"]=output;
+
+        await job.save();
+
+        console.log(job);
         // return res.json({filepath, output});
     }
     catch(err){
+        job["completedAt"]=new Date();
+        job["status"]="error";
+        job["output"]=JSON.stringify(err);
+        job.save();
         if (err.response) {
             // The request was made and the server responded with a status code
             // that falls out of the range of 2xx
             console.log(err.response.data);
-            res.status(500).json({message: 'Server responded with an error', error: err.response.data});
+            // res.status(500).json({message: 'Server responded with an error', error: err.response.data});
         } else if (err.request) {
             // The request was made but no response was received
             console.log(err.request);
-            res.status(500).json({message: 'No response received from the server', error: err.request});
+            // res.status(500).json({message: 'No response received from the server', error: err.request});
         } else {
             // Something happened in setting up the request that triggered an Error
             console.log('Error', err.message);
-            res.status(500).json({message: 'An error occurred setting up the request', error: err.message});
+            // res.status(500).json({message: 'An error occurred setting up the request', error: err.message});
         }
     }
 });
