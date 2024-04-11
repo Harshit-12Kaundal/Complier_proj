@@ -17,6 +17,9 @@ function App() {
       code
     };
     try {
+      setJobId("");
+      setStatus("");
+      setOutput("");
       const {data}=await axios.post("http://localhost:5000/run",payload);
       // console.log(data);
       setJobId(data.jobId);
@@ -38,6 +41,7 @@ function App() {
         clearInterval(intervalId);
       }
       else{
+        setStatus("Error:Please retry!");
         console.error(error)
         clearInterval(intervalId);
         setOutput(error);
