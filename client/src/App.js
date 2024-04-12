@@ -17,7 +17,7 @@ function App() {
   },[language])
 
   const handleSubmit = async(e) => {
-    e.preventDefault();
+    // e.preventDefault();
     const payload ={
       language,
       code
