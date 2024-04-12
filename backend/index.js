@@ -3,8 +3,8 @@ const cors= require('cors');
 const mongoose = require('mongoose');
 
 const {generateFile}= require('./GenerateFile');
-const{ executeCpp } =require('./executeCpp'); 
-const { executePy } = require('./executePy');
+
+const {addJobToQueue}= require('./jobQueue');
 const Job=require('./models/job.js')
 
 mongoose.connect('mongodb://127.0.0.1:27017/mydatabase')
@@ -57,46 +57,15 @@ app.post('/run', async(req, res) => {
 
         job= await new Job({language:language, filepath}).save();
         const jobId=job["_id"];
-
+        addJobToQueue(jobId);
+        // console.log(addJobToQueue(jobId));
+        console.log(job);
         res.status(201).json({success:true, jobId});
-        console.log(job);
         let output;
-        job["startedAt"]= new Date();
-        if(language === "cpp"){
-            output =await executeCpp(filepath);
-        }
-        else{
-            output= await executePy(filepath);
-        }
-        job["completedAt"]=new Date();
-        job["status"]="success";
-        job["output"]=output;
-
-        await job.save();
-
-        console.log(job);
-        // return res.json({filepath, output});
+    }catch(error){
+        return res.status(500).json({success:false ,err:JSON.stringify(error)});
     }
-    catch(err){
-        job["completedAt"]=new Date();
-        job["status"]="error";
-        job["output"]=JSON.stringify(err);
-        job.save();
-        if (err.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            console.log(err.response.data);
-            // res.status(500).json({message: 'Server responded with an error', error: err.response.data});
-        } else if (err.request) {
-            // The request was made but no response was received
-            console.log(err.request);
-            // res.status(500).json({message: 'No response received from the server', error: err.request});
-        } else {
-            // Something happened in setting up the request that triggered an Error
-            console.log('Error', err.message);
-            // res.status(500).json({message: 'An error occurred setting up the request', error: err.message});
-        }
-    }
+
 });
 
 
