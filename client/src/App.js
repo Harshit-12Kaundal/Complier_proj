@@ -1,6 +1,7 @@
 import './App.css';
-import React ,{useState} from 'react';
+import React ,{useState ,useEffect} from 'react';
 import axios from 'axios';
+import stubs from "./defaultStubs.js"
 
 function App() {
 
@@ -9,6 +10,11 @@ function App() {
   const [language,setLanguage] = useState('');
   const [status, setStatus] = useState('');
   const [jobId,setJobId] = useState('');
+
+
+  useEffect(()=>{
+    setCode(stubs[language])
+  },[language])
 
   const handleSubmit = async(e) => {
     e.preventDefault();
@@ -67,9 +73,12 @@ function App() {
           <label>Language</label>
             <select 
               value={language} 
-              onChange={(e)=>
-                {setLanguage(e.target.value);
-                console.log(e.target.value);
+              onChange={(e)=>{
+                let response = window.confirm("WARNING: Switching the language will remove your code")
+                if(response){
+                  setLanguage(e.target.value);
+                  console.log(e.target.value);
+                }
               }}
             >
               <option value="cpp">C++</option>
